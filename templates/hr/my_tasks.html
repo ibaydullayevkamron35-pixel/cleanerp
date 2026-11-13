@@ -1,0 +1,75 @@
+{% extends "base_panel.html" %}
+{% block title %}Mening vazifalarim{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Mening vazifalarim</h1></div>
+
+{% if not employee %}
+<div class="card"><div class="empty"><h2>Xodim kartochkasi biriktirilmagan</h2><p>Menejerga murojaat qiling: sizning hisobingiz xodim kartochkasiga ulanishi kerak.</p></div></div>
+{% else %}
+<div class="card mb-4">
+  <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+      <div class="fw-semibold">{{ employee.full_name }}</div>
+      <div class="text-muted small">{{ employee.position }}{% if employee.team %} · {{ employee.team.name }}{% endif %}</div>
+      <div class="mt-2 small">
+        Bugun ({{ today|date:"d.m.Y" }}):
+        {% if attendance and attendance.check_in %}keldi <strong>{{ attendance.check_in|time:"H:i" }}</strong>{% else %}hali kelmadi{% endif %}
+        {% if attendance and attendance.check_out %}, ketdi <strong>{{ attendance.check_out|time:"H:i" }}</strong>{% endif %}
+      </div>
+    </div>
+    <form method="post" action="{% url 'my_checkin' %}" class="d-flex gap-2">{% csrf_token %}
+      <button class="btn btn-success" name="action" value="in" type="submit" {% if attendance and attendance.check_in %}disabled{% endif %}><i class="bi bi-box-arrow-in-right me-1"></i>Ishga keldim</button>
+      <button class="btn btn-outline-secondary" name="action" value="out" type="submit" {% if not attendance or not attendance.check_in or attendance.check_out %}disabled{% endif %}><i class="bi bi-box-arrow-right me-1"></i>Ketdim</button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">Biriktirilgan buyurtmalar</div>
+  {% if orders %}
+  <div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th scope="col">Sana / vaqt</th><th scope="col">Obyekt</th><th scope="col">Xizmat</th><th scope="col">Holat</th><th scope="col"></th></tr></thead>
+    <tbody>
+      {% for o in orders %}
+      <tr>
+        <td class="text-nowrap">{{ o.date|date:"d.m.Y" }} {{ o.time|time:"H:i" }}</td>
+        <td>{{ o.facility.name }}<div class="small text-muted">{{ o.facility.address }}</div></td>
+        <td>{{ o.service.name }}</td>
+        <td><span class="badge text-bg-{% if o.status == 'in_progress' %}warning{% elif o.status == 'confirmed' %}info{% else %}primary{% endif %}">{{ o.get_status_display }}</span></td>
+        <td class="text-end">
+          {% if o.status == 'confirmed' %}
+          <form method="post" action="{% url 'orders_status' o.pk 'in_progress' %}" class="inline-form">{% csrf_token %}<input type="hidden" name="next" value="{% url 'my_tasks' %}"><button class="btn btn-sm btn-warning" type="submit">Boshlash</button></form>
+          {% elif o.status == 'in_progress' %}
+          <form method="post" action="{% url 'orders_status' o.pk 'done' %}" class="inline-form">{% csrf_token %}<input type="hidden" name="next" value="{% url 'my_tasks' %}"><button class="btn btn-sm btn-success" type="submit"><i class="bi bi-check2 me-1"></i>Bajarildi</button></form>
+          {% else %}<span class="text-muted small">Tasdiq kutilmoqda</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody></table></div>
+  {% else %}<div class="empty py-4">Hozircha faol vazifa yo'q.</div>{% endif %}
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">Yaqin smenalar</div>
+      {% if shifts %}
+      <ul class="list-group list-group-flush">
+        {% for s in shifts %}<li class="list-group-item d-flex justify-content-between"><span>{{ s.date|date:"d.m.Y" }} · {{ s.facility.name }}</span><span class="text-muted">{{ s.start_time|time:"H:i" }}–{{ s.end_time|time:"H:i" }}</span></li>{% endfor %}
+      </ul>
+      {% else %}<div class="empty py-4">Smena belgilanmagan.</div>{% endif %}
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">Oxirgi bajarilganlar</div>
+      {% if done_orders %}
+      <ul class="list-group list-group-flush">
+        {% for o in done_orders %}<li class="list-group-item">{{ o.date|date:"d.m.Y" }} · {{ o.facility.name }}</li>{% endfor %}
+      </ul>
+      {% else %}<div class="empty py-4">Hali yo'q.</div>{% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

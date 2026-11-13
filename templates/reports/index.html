@@ -1,0 +1,49 @@
+{% extends "base_panel.html" %}
+{% block title %}Hisobotlar{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Hisobotlar</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="?{{ query }}&export=xlsx"><i class="bi bi-file-earmark-excel me-1"></i>Excel</a>
+    <a class="btn btn-outline-secondary" href="?{{ query }}&export=pdf"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
+  </div>
+</div>
+
+<form method="get" class="filter-bar" aria-label="Hisobot sozlamalari">
+  <select name="type" class="form-select" aria-label="Hisobot turi">
+    {% for key, label in types %}<option value="{{ key }}" {% if key == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <select name="period" class="form-select" aria-label="Davr">
+    {% for key, label in periods %}<option value="{{ key }}" {% if key == period %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    {% if period == 'custom' %}<option value="custom" selected>Tanlangan oraliq</option>{% endif %}
+  </select>
+  <input type="date" name="from" class="form-control" value="{% if period == 'custom' %}{{ start|date:'Y-m-d' }}{% endif %}" aria-label="Boshlanish sanasi">
+  <input type="date" name="to" class="form-control" value="{% if period == 'custom' %}{{ end|date:'Y-m-d' }}{% endif %}" aria-label="Tugash sanasi">
+  <button class="btn btn-primary" type="submit">Hisoblash</button>
+</form>
+
+<div class="card mb-3">
+  <div class="card-header">{{ title }} <span class="text-muted fw-normal ms-2">{{ start|date:"d.m.Y" }} — {{ end|date:"d.m.Y" }}</span></div>
+  {% if summary %}
+  <div class="card-body border-bottom">
+    <div class="row g-3">
+      {% for label, c in summary %}
+      <div class="col-6 col-md-3"><div class="text-muted small">{{ label }}</div><div class="fs-5 fw-semibold">{{ c.v }}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% if rows %}
+  <div class="table-responsive">
+    <table class="table table-sm table-hover align-middle">
+      <thead><tr>{% for h in headers %}<th scope="col">{{ h }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for row in rows %}<tr>{% for c in row %}<td>{% include "crud/_cell.html" %}</td>{% endfor %}</tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><h2>Ma'lumot topilmadi</h2><p>Tanlangan davrda bu hisobot bo'yicha yozuv yo'q. Davrni kengaytirib ko'ring.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base_panel.html" %}
+{% block title %}Ish haqi{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Ish haqi</h1></div>
+
+<form method="get" class="filter-bar" aria-label="Davr">
+  <select name="month" class="form-select" aria-label="Oy">{% for v, l in months %}<option value="{{ v }}" {% if v == month %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <select name="year" class="form-select" aria-label="Yil">{% for y in years %}<option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>{% endfor %}</select>
+</form>
+
+{% if editor %}
+<form method="post" class="mb-3">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="generate"><input type="hidden" name="year" value="{{ year }}"><input type="hidden" name="month" value="{{ month }}">
+  <button class="btn btn-primary" type="submit"><i class="bi bi-calculator me-1"></i>{{ month|stringformat:"02d" }}.{{ year }} uchun hisoblash</button>
+  <span class="text-muted small ms-2">Belgilangan oylik, davomat soatlari yoki brigada hajmi bo'yicha. To'langanlar o'zgarmaydi.</span>
+</form>
+{% endif %}
+
+<div class="card">
+  {% if records %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th scope="col">Xodim</th><th scope="col">Maosh turi</th><th scope="col" class="text-end">Hisoblangan</th><th scope="col" class="text-end">Bonus</th><th scope="col" class="text-end">Jarima</th><th scope="col" class="text-end">Jami</th><th scope="col">Holat</th>{% if editor %}<th scope="col"></th>{% endif %}</tr></thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td><a href="{% url 'employees_detail' r.employee.pk %}">{{ r.employee.full_name }}</a></td>
+          <td class="text-muted small">{{ r.employee.get_pay_type_display }}</td>
+          <td class="text-end">{{ r.base|floatformat:"0g" }}</td><td class="text-end">{{ r.bonus|floatformat:"0g" }}</td>
+          <td class="text-end">{{ r.penalty|floatformat:"0g" }}</td><td class="text-end fw-semibold">{{ r.total|floatformat:"0g" }}</td>
+          <td>{% if r.paid %}<span class="badge text-bg-success">To'langan {{ r.paid_date|date:"d.m" }}</span>{% else %}<span class="badge text-bg-warning">Kutilmoqda</span>{% endif %}</td>
+          {% if editor %}
+          <td class="table-actions">
+            {% if not r.paid %}
+            <a class="btn btn-sm btn-outline-secondary" href="{% url 'payroll_records_edit' r.pk %}?next={% url 'payroll' %}%3Fyear%3D{{ year }}%26month%3D{{ month }}" title="Bonus / jarima" aria-label="Bonus yoki jarimani tahrirlash"><i class="bi bi-pencil"></i></a>
+            <form method="post" class="inline-form">{% csrf_token %}
+              <input type="hidden" name="action" value="pay"><input type="hidden" name="record" value="{{ r.pk }}"><input type="hidden" name="year" value="{{ year }}"><input type="hidden" name="month" value="{{ month }}">
+              <button class="btn btn-sm btn-success" type="submit">To'landi</button>
+            </form>
+            {% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr class="fw-semibold"><td colspan="5" class="text-end">Jami:</td><td class="text-end">{{ total_sum|floatformat:"0g" }}</td><td colspan="2" class="text-muted small">To'langan: {{ paid_sum|floatformat:"0g" }}</td></tr></tfoot>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><h2>Bu oy uchun ish haqi hisoblanmagan</h2>{% if editor %}<p>«Hisoblash» tugmasini bosing.</p>{% endif %}</div>
+  {% endif %}
+</div>
+{% endblock %}

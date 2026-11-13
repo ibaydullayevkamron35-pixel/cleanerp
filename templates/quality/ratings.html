@@ -1,0 +1,41 @@
+{% extends "base_panel.html" %}
+{% block title %}Sifat reytingi{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Sifat reytingi</h1></div>
+<p class="text-muted">Reyting mijozlarning baholari (1–5) va obyektlardagi tekshiruv ballari (%) asosida hisoblanadi.</p>
+
+<div class="card mb-4">
+  <div class="card-header">Brigadalar</div>
+  {% if team_rows %}
+  <div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th scope="col">#</th><th scope="col">Brigada</th><th scope="col">Brigadir</th><th scope="col" class="text-end">Xodimlar</th><th scope="col" class="text-end">Bajarilgan</th><th scope="col" class="text-end">Mijoz bahosi</th><th scope="col" class="text-end">Tekshiruv balli</th></tr></thead>
+    <tbody>
+      {% for r in team_rows %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td><a href="{% url 'teams_detail' r.team.pk %}">{{ r.team.name }}</a></td>
+        <td>{{ r.team.foreman.full_name|default:"—" }}</td>
+        <td class="text-end">{{ r.members }}</td><td class="text-end">{{ r.done }}</td>
+        <td class="text-end">{% if r.rating %}<strong>{{ r.rating|floatformat:2 }}</strong> <span class="text-muted small">({{ r.reviews }})</span>{% else %}—{% endif %}</td>
+        <td class="text-end">{% if r.inspection %}<strong>{{ r.inspection|floatformat:1 }}%</strong> <span class="text-muted small">({{ r.inspections }})</span>{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody></table></div>
+  {% else %}<div class="empty py-4">Brigadalar yo'q.</div>{% endif %}
+</div>
+
+<div class="card">
+  <div class="card-header">Xodimlar (brigada ko'rsatkichi bo'yicha, eng yaxshi 20 ta)</div>
+  {% if emp_rows %}
+  <div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th scope="col">Xodim</th><th scope="col">Brigada</th><th scope="col" class="text-end">Mijoz bahosi</th><th scope="col" class="text-end">Tekshiruv balli</th></tr></thead>
+    <tbody>
+      {% for r in emp_rows %}
+      <tr><td><a href="{% url 'employees_detail' r.emp.pk %}">{{ r.emp.full_name }}</a></td><td>{{ r.emp.team.name|default:"—" }}</td>
+        <td class="text-end">{% if r.rating %}{{ r.rating|floatformat:2 }}{% else %}—{% endif %}</td>
+        <td class="text-end">{% if r.inspection %}{{ r.inspection|floatformat:1 }}%{% else %}—{% endif %}</td></tr>
+      {% endfor %}
+    </tbody></table></div>
+  {% else %}<div class="empty py-4">Xodimlar yo'q.</div>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base_panel.html" %}
+{% block title %}O'chirish{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ cfg.singular }}ni o'chirish</h1></div>
+<div class="card" style="max-width: 560px">
+  <form method="post" class="card-body">
+    {% csrf_token %}
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    <p class="mb-1">Quyidagi yozuv o'chiriladi:</p>
+    <p class="fs-5 fw-semibold">{{ obj }}</p>
+    <p class="text-muted small">Bu amalni ortga qaytarib bo'lmaydi. Agar yozuv boshqa ma'lumotlar bilan bog'langan bo'lsa, tizim o'chirishga ruxsat bermaydi.</p>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-danger">Ha, o'chirish</button>
+      <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Bekor qilish</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

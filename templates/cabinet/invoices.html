@@ -1,0 +1,29 @@
+{% extends "cabinet/base.html" %}
+{% block title %}Hisob-fakturalar{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Hisob-fakturalar va to'lovlar</h1>
+  <div class="text-muted">Jami qarz: <strong class="{% if debt %}text-danger{% endif %}">{{ debt|floatformat:"0g" }} so'm</strong></div>
+</div>
+<div class="card">
+  {% if invoices %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th scope="col">Raqami</th><th scope="col">Sana</th><th scope="col">Muddati</th><th scope="col">Summa</th><th scope="col">To'langan</th><th scope="col">Qarz</th><th scope="col">Holat</th><th scope="col"></th></tr></thead>
+      <tbody>
+        {% for i in invoices %}
+        <tr>
+          <td>{{ i.number }}</td><td>{{ i.date|date:"d.m.Y" }}</td><td>{{ i.due_date|date:"d.m.Y"|default:"—" }}</td>
+          <td>{{ i.amount|floatformat:"0g" }}</td><td>{{ i.paid_amount|floatformat:"0g" }}</td><td>{{ i.debt|floatformat:"0g" }}</td>
+          <td><span class="badge text-bg-{% if i.status == 'paid' %}success{% elif i.status == 'partial' %}warning{% elif i.status == 'cancelled' %}secondary{% else %}danger{% endif %}">{{ i.get_status_display }}</span></td>
+          <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'invoices_pdf' i.pk %}" aria-label="PDF yuklab olish"><i class="bi bi-file-earmark-pdf"></i></a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><h2>Hisob-faktura yo'q</h2><p>Buyurtmangiz bajarilgach, hisob-faktura shu yerda paydo bo'ladi.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

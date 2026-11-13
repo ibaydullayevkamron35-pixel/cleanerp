@@ -1,0 +1,45 @@
+{% extends "cabinet/base.html" %}
+{% block title %}Shikoyatlar{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Shikoyat va takliflar</h1></div>
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">Yangi shikoyat</div>
+      <form method="post" class="card-body" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="mb-3">
+            <label class="form-label {% if field.field.required %}req{% endif %}" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% for e in field.errors %}<div class="text-danger small mt-1" role="alert">{{ e }}</div>{% endfor %}
+          </div>
+        {% endfor %}
+        <button class="btn btn-primary" type="submit">Yuborish</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">Yuborilgan shikoyatlar</div>
+      {% if complaints %}
+      <ul class="list-group list-group-flush">
+        {% for c in complaints %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between gap-2">
+            <strong>{{ c.subject }}</strong>
+            <span class="badge text-bg-{% if c.status == 'resolved' %}success{% elif c.status == 'in_progress' %}warning{% elif c.status == 'closed' %}secondary{% else %}primary{% endif %}">{{ c.get_status_display }}</span>
+          </div>
+          <div class="small text-muted">{{ c.date|date:"d.m.Y" }}{% if c.order %} · {{ c.order.number }}{% endif %}</div>
+          <div class="mt-1">{{ c.content }}</div>
+          {% if c.resolution %}<div class="mt-2 small border-start border-3 ps-2"><strong>Javob:</strong> {{ c.resolution }}</div>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty py-4">Shikoyatlar yo'q.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

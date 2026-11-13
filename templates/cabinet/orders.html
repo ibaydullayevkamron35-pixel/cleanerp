@@ -1,0 +1,35 @@
+{% extends "cabinet/base.html" %}
+{% block title %}Buyurtmalar{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Buyurtmalarim</h1>
+  <a class="btn btn-primary" href="{% url 'cabinet_order_add' %}"><i class="bi bi-plus-lg me-1"></i>Yangi buyurtma</a>
+</div>
+<div class="card">
+  {% if rows %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th scope="col">Raqami</th><th scope="col">Sana</th><th scope="col">Xizmat / obyekt</th><th scope="col">Summa</th><th scope="col">Holat</th><th scope="col"></th></tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.o.number }}</td>
+          <td class="text-nowrap">{{ r.o.date|date:"d.m.Y" }} {{ r.o.time|time:"H:i" }}</td>
+          <td>{{ r.o.service.name }}<div class="small text-muted">{{ r.o.facility.name }}</div></td>
+          <td class="text-nowrap">{{ r.o.total|floatformat:"0g" }} so'm</td>
+          <td><span class="badge text-bg-{% if r.o.status == 'done' %}success{% elif r.o.status == 'in_progress' %}warning{% elif r.o.status == 'confirmed' %}info{% elif r.o.status == 'cancelled' %}secondary{% else %}primary{% endif %}">{{ r.o.get_status_display }}</span></td>
+          <td class="text-end text-nowrap">
+            {% if r.invoice %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'invoices_pdf' r.invoice.pk %}" title="Hisob-faktura PDF"><i class="bi bi-file-earmark-pdf"></i></a>{% endif %}
+            {% if r.can_review %}<a class="btn btn-sm btn-outline-primary" href="{% url 'cabinet_review' r.o.pk %}"><i class="bi bi-star me-1"></i>Baholash</a>{% endif %}
+            {% if r.reviewed %}<span class="text-muted small"><i class="bi bi-check2"></i> Baholangan</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><h2>Buyurtmalar yo'q</h2><p>Birinchi buyurtmani bering.</p><a class="btn btn-primary" href="{% url 'cabinet_order_add' %}">Buyurtma berish</a></div>
+  {% endif %}
+</div>
+{% endblock %}

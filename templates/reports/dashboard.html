@@ -1,0 +1,113 @@
+{% extends "base_panel.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Dashboard</h1>
+  <form method="get" class="d-flex flex-wrap gap-2 align-items-center" aria-label="Davr tanlash">
+    <div class="btn-group" role="group" aria-label="Davr">
+      {% for code, label in periods %}
+        <a class="btn btn-sm {% if period == code %}btn-primary{% else %}btn-outline-secondary{% endif %}" href="?period={{ code }}">{{ label }}</a>
+      {% endfor %}
+    </div>
+    <span class="text-muted small">{{ start|date:"d.m.Y" }} — {{ end|date:"d.m.Y" }}</span>
+  </form>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><div class="card kpi"><div class="label">Bugungi buyurtmalar</div><div class="value">{{ kpis.orders_today }}</div><div class="sub">Davrda: {{ kpis.orders_period }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card kpi"><div class="label">Faol obyektlar</div><div class="value">{{ kpis.facilities }}</div><div class="sub">Xodimlar: {{ kpis.employees }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card kpi"><div class="label">Daromad (davr, so'm)</div><div class="value">{{ kpis.revenue_period|floatformat:"0g" }}</div><div class="sub">Bu oy: {{ kpis.revenue_month|floatformat:"0g" }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card kpi {% if kpis.debt %}alert-kpi{% endif %}"><div class="label">Qarzdorlik (so'm)</div><div class="value">{{ kpis.debt|floatformat:"0g" }}</div><div class="sub">Muddati o'tgan: {{ kpis.overdue }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card kpi"><div class="label">Xarajat (davr, so'm)</div><div class="value">{{ kpis.expense_period|floatformat:"0g" }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card kpi"><div class="label">Foyda (davr, so'm)</div><div class="value {% if kpis.profit_period < 0 %}text-danger{% endif %}">{{ kpis.profit_period|floatformat:"0g" }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card kpi"><div class="label">Yangi arizalar</div><div class="value">{{ kpis.new_leads }}</div>{% if can.leads.view %}<div class="sub"><a href="{% url 'leads_list' %}?status=new">Ko'rish</a></div>{% endif %}</div></div>
+  <div class="col-6 col-lg-3"><div class="card kpi {% if kpis.open_complaints %}alert-kpi{% endif %}"><div class="label">Ochiq shikoyatlar</div><div class="value">{{ kpis.open_complaints }}</div>{% if can.complaints.view %}<div class="sub"><a href="{% url 'complaints_list' %}">Ko'rish</a></div>{% endif %}</div></div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-8"><div class="card"><div class="card-header">Daromad va xarajat dinamikasi (oxirgi 6 oy)</div><div class="card-body"><div class="chart-box"><canvas id="revChart" role="img" aria-label="Daromad va xarajat grafigi"></canvas></div></div></div></div>
+  <div class="col-lg-4"><div class="card h-100"><div class="card-header">Xizmat turlari ulushi</div><div class="card-body"><div class="chart-box"><canvas id="svcChart" role="img" aria-label="Xizmat turlari ulushi"></canvas></div></div></div></div>
+  <div class="col-12"><div class="card"><div class="card-header">Brigadalar samaradorligi (bajarilgan buyurtmalar va o'rtacha baho)</div><div class="card-body"><div class="chart-box" style="height:260px"><canvas id="teamChart" role="img" aria-label="Brigadalar samaradorligi"></canvas></div></div></div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">Bugungi buyurtmalar</div>
+      {% if today_orders %}
+      <div class="table-responsive"><table class="table table-hover align-middle">
+        <thead><tr><th scope="col">Vaqt</th><th scope="col">Mijoz / obyekt</th><th scope="col">Xizmat</th><th scope="col">Brigada</th><th scope="col">Holat</th></tr></thead>
+        <tbody>
+          {% for o in today_orders %}
+          <tr><td>{{ o.time|time:"H:i" }}</td>
+            <td><a href="{% url 'orders_detail' o.pk %}">{{ o.client.name }}</a><div class="small text-muted">{{ o.facility.name }}</div></td>
+            <td>{{ o.service.name }}</td><td>{{ o.team.name|default:"—" }}</td>
+            <td><span class="badge text-bg-{% if o.status == 'done' %}success{% elif o.status == 'in_progress' %}warning{% elif o.status == 'confirmed' %}info{% else %}primary{% endif %}">{{ o.get_status_display }}</span></td></tr>
+          {% endfor %}
+        </tbody></table></div>
+      {% else %}<div class="empty py-4">Bugunga buyurtma yo'q.</div>{% endif %}
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card mb-3">
+      <div class="card-header">Omborda kam qolganlar</div>
+      {% if low_stock %}
+      <ul class="list-group list-group-flush">
+        {% for i in low_stock %}<li class="list-group-item d-flex justify-content-between"><a href="{% url 'inventory_detail' i.pk %}">{{ i.name }}</a><span class="text-danger">{{ i.quantity|floatformat:"-2g" }} / min {{ i.min_quantity|floatformat:"-2g" }} {{ i.unit }}</span></li>{% endfor %}
+      </ul>
+      {% else %}<div class="empty py-4">Hamma mahsulot yetarli.</div>{% endif %}
+    </div>
+    <div class="card">
+      <div class="card-header">Oxirgi qo'shilgan buyurtmalar</div>
+      {% if recent_orders %}
+      <ul class="list-group list-group-flush">
+        {% for o in recent_orders %}<li class="list-group-item d-flex justify-content-between gap-2"><a href="{% url 'orders_detail' o.pk %}">{{ o.number }} · {{ o.client.name }}</a><span class="text-muted small">{{ o.date|date:"d.m" }}</span></li>{% endfor %}
+      </ul>
+      {% else %}<div class="empty py-4">Buyurtmalar yo'q.</div>{% endif %}
+    </div>
+  </div>
+</div>
+{{ chart|json_script:"chart-data" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  var d = JSON.parse(document.getElementById('chart-data').textContent);
+  var brand = '#0f766e', warm = '#d97706', grid = '#e3e8ea';
+  var palette = ['#0f766e', '#2f9e8f', '#7bc4b8', '#d97706', '#e8a94b', '#5b7c99', '#9aaebf', '#b8c4cc'];
+  var fmt = function (v) { return new Intl.NumberFormat('uz-UZ').format(v); };
+  Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+  Chart.defaults.color = '#62727a';
+
+  new Chart(document.getElementById('revChart'), {
+    type: 'bar',
+    data: { labels: d.months, datasets: [
+      { label: 'Daromad', data: d.revenue, backgroundColor: brand, borderRadius: 4 },
+      { label: 'Xarajat', data: d.expenses, backgroundColor: warm, borderRadius: 4 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + fmt(c.parsed.y) + " so'm"; } } } },
+      scales: { y: { beginAtZero: true, grid: { color: grid }, ticks: { callback: fmt } }, x: { grid: { display: false } } } }
+  });
+
+  new Chart(document.getElementById('svcChart'), {
+    type: 'doughnut',
+    data: { labels: d.services.labels, datasets: [{ data: d.services.values, backgroundColor: palette, borderWidth: 2, borderColor: '#fff' }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
+  });
+
+  new Chart(document.getElementById('teamChart'), {
+    data: { labels: d.teams.labels, datasets: [
+      { type: 'bar', label: 'Bajarilgan buyurtmalar', data: d.teams.done, backgroundColor: brand, borderRadius: 4, yAxisID: 'y' },
+      { type: 'line', label: "O'rtacha baho (1-5)", data: d.teams.rating, borderColor: warm, backgroundColor: warm, tension: .25, yAxisID: 'y1' }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true, grid: { color: grid }, ticks: { precision: 0 } },
+                y1: { position: 'right', min: 0, max: 5, grid: { display: false } },
+                x: { grid: { display: false } } } }
+  });
+})();
+</script>
+{% endblock %}

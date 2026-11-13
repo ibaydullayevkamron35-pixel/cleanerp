@@ -1,0 +1,26 @@
+{% extends "cabinet/base.html" %}
+{% block title %}Obyektlar{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Obyektlarim</h1>
+  <a class="btn btn-primary" href="{% url 'cabinet_facility_add' %}"><i class="bi bi-plus-lg me-1"></i>Obyekt qo'shish</a>
+</div>
+<div class="card">
+  {% if facilities %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th scope="col">Nomi</th><th scope="col">Turi</th><th scope="col">Manzil</th><th scope="col">Maydon (m²)</th><th scope="col">Holat</th></tr></thead>
+      <tbody>
+        {% for f in facilities %}
+        <tr><td class="fw-semibold">{{ f.name }}</td><td>{{ f.get_kind_display }}</td><td>{{ f.address }}</td><td>{{ f.area|floatformat:"-2g" }}</td>
+          <td><span class="badge text-bg-{% if f.status == 'active' %}success{% else %}secondary{% endif %}">{{ f.get_status_display }}</span></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><h2>Obyekt qo'shilmagan</h2><p>Buyurtma berish uchun avval tozalanadigan joyni qo'shing.</p>
+    <a class="btn btn-primary" href="{% url 'cabinet_facility_add' %}">Obyekt qo'shish</a></div>
+  {% endif %}
+</div>
+{% endblock %}

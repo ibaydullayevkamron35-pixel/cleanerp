@@ -1,0 +1,30 @@
+{% extends "base_public.html" %}
+{% block title %}Xizmatlar va narxlar · {{ COMPANY.name }}{% endblock %}
+{% block content %}
+<section class="block">
+  <div class="container">
+    <h1 class="section-title">Xizmatlar va narxlar</h1>
+    <p class="section-sub mb-4">Yakuniy summa obyekt maydoni va tanlangan xizmatga qarab hisoblanadi.</p>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th scope="col">Xizmat</th><th scope="col">Tavsif</th><th scope="col" class="text-end">Narx</th></tr></thead>
+        <tbody>
+          {% for s in services %}
+          <tr>
+            <td class="fw-semibold"><i class="bi {{ s.icon|default:'bi-stars' }} text-success me-2"></i>{{ s.name }}</td>
+            <td class="text-muted">{{ s.description|default:"—" }}</td>
+            <td class="text-end text-nowrap"><span class="price">{{ s.price|floatformat:"0g" }}</span> <small class="text-muted">so'm / {{ s.unit_short }}</small></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="text-muted text-center py-4">Narxlar ro'yxati hali kiritilmagan.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mt-4">
+      <a class="btn btn-primary" href="{% url 'landing' %}#ariza">Ariza qoldirish</a>
+      <a class="btn btn-outline-primary" href="{% url 'register' %}">Kabinetda buyurtma berish</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "cabinet/base.html" %}
+{% load static %}
+{% block title %}Bosh sahifa{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Salom, {{ user.display_name }}</h1>
+  <a class="btn btn-primary" href="{% url 'cabinet_order_add' %}"><i class="bi bi-plus-lg me-1"></i>Yangi buyurtma</a>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><div class="card kpi"><div class="label">Faol buyurtmalar</div><div class="value">{{ active_orders }}</div></div></div>
+  <div class="col-6 col-md-3"><div class="card kpi"><div class="label">Bajarilgan</div><div class="value">{{ done_orders }}</div></div></div>
+  <div class="col-6 col-md-3"><div class="card kpi"><div class="label">Obyektlar</div><div class="value">{{ facility_count }}</div></div></div>
+  <div class="col-6 col-md-3"><div class="card kpi {% if debt %}alert-kpi{% endif %}"><div class="label">Qarzdorlik (so'm)</div><div class="value">{{ debt|floatformat:"0g" }}</div></div></div>
+</div>
+<div class="card">
+  <div class="card-header">Oxirgi buyurtmalar</div>
+  {% if recent %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th scope="col">Raqami</th><th scope="col">Sana</th><th scope="col">Xizmat</th><th scope="col">Obyekt</th><th scope="col">Summa</th><th scope="col">Holat</th></tr></thead>
+      <tbody>
+        {% for o in recent %}
+        <tr>
+          <td>{{ o.number }}</td><td>{{ o.date|date:"d.m.Y" }}</td><td>{{ o.service.name }}</td><td>{{ o.facility.name }}</td>
+          <td>{{ o.total|floatformat:"0g" }}</td>
+          <td><span class="badge text-bg-{% if o.status == 'done' %}success{% elif o.status == 'in_progress' %}warning{% elif o.status == 'confirmed' %}info{% elif o.status == 'cancelled' %}secondary{% else %}primary{% endif %}">{{ o.get_status_display }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><h2>Hali buyurtma yo'q</h2><p>Birinchi buyurtmangizni bering — menejer tez orada tasdiqlaydi.</p>
+    <a class="btn btn-primary" href="{% url 'cabinet_order_add' %}">Buyurtma berish</a></div>
+  {% endif %}
+</div>
+{% endblock %}

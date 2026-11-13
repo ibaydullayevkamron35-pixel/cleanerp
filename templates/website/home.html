@@ -1,0 +1,118 @@
+{% extends "base_public.html" %}
+{% load static %}
+{% block content %}
+<header class="hero">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-7">
+        <h1>Toza makon — sog'lom biznes va qulay uy</h1>
+        <p class="lead mt-3">Ofis, savdo markazi, maktab, shifoxona va uylar uchun muntazam va bir martalik tozalash. Narx oldindan aniq, jarayon esa shaffof.</p>
+        <ul class="hero-points">
+          <li><i class="bi bi-check-circle-fill"></i>Buyurtmangiz holatini shaxsiy kabinetda kuzatasiz</li>
+          <li><i class="bi bi-check-circle-fill"></i>Tajribali brigadalar va sertifikatlangan vositalar</li>
+          <li><i class="bi bi-check-circle-fill"></i>Sifat nazorati: har tozalashdan keyin tekshiruv</li>
+        </ul>
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          <a class="btn btn-primary btn-lg" href="#ariza">Ariza qoldirish</a>
+          <a class="btn btn-outline-primary btn-lg" href="{% url 'services_public' %}">Narxlarni ko'rish</a>
+        </div>
+      </div>
+      <div class="col-lg-5" id="ariza">
+        <div class="lead-card">
+          <h2>Bepul hisob-kitob oling</h2>
+          <p class="text-muted small">Ma'lumotlarni qoldiring — menejer siz bilan bog'lanib, narxni aniqlaydi.</p>
+          <form method="post" action="{% url 'landing' %}#ariza" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+              <div class="mb-3">
+                <label class="form-label small fw-semibold {% if field.field.required %}req{% endif %}" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for e in field.errors %}<div class="text-danger small mt-1" role="alert">{{ e }}</div>{% endfor %}
+              </div>
+            {% endfor %}
+            <button class="btn btn-primary w-100" type="submit">Yuborish</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="block" id="afzalliklar">
+  <div class="container">
+    <h2 class="section-title">Nega bizni tanlashadi</h2>
+    <p class="section-sub mb-5">Qog'oz va Excel o'rniga yagona tizim: har bir buyurtma, xodim va to'lov nazorat ostida.</p>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3 feature"><div class="ico"><i class="bi bi-clipboard-check"></i></div><h3>Aniq jarayon</h3><p>Buyurtma holati: yangi, tasdiqlangan, jarayonda, bajarildi — hammasi ko'rinib turadi.</p></div>
+      <div class="col-md-6 col-lg-3 feature"><div class="ico"><i class="bi bi-cash-coin"></i></div><h3>Shaffof narx</h3><p>Narx 1 m², soat yoki belgilangan summa bo'yicha. Hisob-faktura PDF ko'rinishida.</p></div>
+      <div class="col-md-6 col-lg-3 feature"><div class="ico"><i class="bi bi-people"></i></div><h3>Biriktirilgan brigada</h3><p>Obyektingizga doimiy brigada va nazoratchi biriktiriladi.</p></div>
+      <div class="col-md-6 col-lg-3 feature"><div class="ico"><i class="bi bi-star"></i></div><h3>Sifat kafolati</h3><p>Tekshiruv varaqlari, baholash va shikoyatlar bilan ishlash tizimi.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="block alt" id="xizmatlar">
+  <div class="container">
+    <h2 class="section-title">Xizmatlarimiz</h2>
+    <p class="section-sub mb-5">Eng ko'p buyurtma qilinadigan xizmat turlari.</p>
+    <div class="row g-4">
+      {% for s in services|slice:":6" %}
+      <div class="col-md-6 col-lg-4">
+        <div class="service-card">
+          <i class="bi {{ s.icon|default:'bi-stars' }} ico"></i>
+          <h3>{{ s.name }}</h3>
+          <p>{{ s.description|default:"Professional tozalash xizmati."|truncatechars:90 }}</p>
+          <div class="price">{{ s.price|floatformat:"0g" }} <small>so'm / {{ s.unit_short }}</small></div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12"><p class="text-muted">Xizmatlar ro'yxati tez orada e'lon qilinadi.</p></div>
+      {% endfor %}
+    </div>
+    <div class="mt-4"><a href="{% url 'services_public' %}">Barcha xizmatlar va narxlar <i class="bi bi-arrow-right"></i></a></div>
+  </div>
+</section>
+
+<section class="block" id="jarayon">
+  <div class="container">
+    <h2 class="section-title">Qanday ishlaymiz</h2>
+    <div class="row g-4 mt-2">
+      <div class="col-md-4"><div class="step-num mb-3">1</div><h3 class="h6 fw-bold">Ariza qoldiring</h3><p class="text-muted">Forma yoki telefon orqali. Menejer obyektingiz haqida so'raydi.</p></div>
+      <div class="col-md-4"><div class="step-num mb-3">2</div><h3 class="h6 fw-bold">Narx va vaqtni kelishamiz</h3><p class="text-muted">Maydon va xizmat turiga qarab aniq summa hisoblanadi, brigada biriktiriladi.</p></div>
+      <div class="col-md-4"><div class="step-num mb-3">3</div><h3 class="h6 fw-bold">Tozalaymiz va tekshiramiz</h3><p class="text-muted">Ish tugagach nazoratchi tekshiradi, siz esa xizmatni baholaysiz.</p></div>
+    </div>
+  </div>
+</section>
+
+{% if stats.done or stats.clients %}
+<section class="block alt">
+  <div class="container">
+    <div class="row g-4 text-center">
+      <div class="col-6 col-md-3 stat"><div class="num">{{ stats.clients }}</div><div class="cap">mijoz</div></div>
+      <div class="col-6 col-md-3 stat"><div class="num">{{ stats.facilities }}</div><div class="cap">faol obyekt</div></div>
+      <div class="col-6 col-md-3 stat"><div class="num">{{ stats.done }}</div><div class="cap">bajarilgan buyurtma</div></div>
+      <div class="col-6 col-md-3 stat"><div class="num">{% if stats.rating %}{{ stats.rating|floatformat:1 }}{% else %}—{% endif %}</div><div class="cap">o'rtacha baho (5 dan)</div></div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if reviews %}
+<section class="block">
+  <div class="container">
+    <h2 class="section-title mb-4">Mijozlar fikri</h2>
+    <div class="row g-4">
+      {% for r in reviews %}
+      <div class="col-md-4">
+        <div class="review">
+          <div class="stars" aria-label="{{ r.rating }} / 5">{% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+          <p class="my-2">«{{ r.comment }}»</p>
+          <div class="small text-muted">{{ r.client.name }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
