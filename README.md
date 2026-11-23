@@ -14,6 +14,7 @@ pip install -r requirements.txt
 python manage.py makemigrations accounts core crm facilities orders hr inventory finance quality
 python manage.py migrate
 python manage.py seed_demo        # demo ma'lumotlar (ixtiyoriy, lekin tavsiya etiladi)
+python manage.py seed_fake        # ko'p hajmli qo'shimcha fake ma'lumotlar (--scale 2, --seed 7)
 python manage.py runserver
 ```
 

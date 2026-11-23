@@ -4,14 +4,14 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from core.models import AuditLog
-from core.permissions import section_required
+from core.permissions import can, section_required
 from core.utils import badge_cell, section
 
 from .models import Client, Lead
 
 
 def client_detail(request, obj):
-    can_edit = request.user.is_superuser or request.user.role in ('admin', 'manager')
+    can_edit = can(request.user, 'clients', 'edit')
     nxt = reverse('clients_detail', args=[obj.pk])
 
     facilities = [
@@ -69,7 +69,7 @@ def client_detail(request, obj):
 
 def lead_detail(request, obj):
     actions = []
-    can_edit = request.user.is_superuser or request.user.role in ('admin', 'manager')
+    can_edit = can(request.user, 'leads', 'edit')
     if can_edit and obj.status != Lead.Status.CONVERTED:
         actions.append({'label': 'Mijozga aylantirish', 'url': reverse('leads_convert', args=[obj.pk]),
                         'method': 'post', 'cls': 'btn-success', 'icon': 'bi-person-plus'})

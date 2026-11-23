@@ -105,5 +105,9 @@ class StockMovement(models.Model):
 
     def delete(self, *args, **kwargs):
         with transaction.atomic():
+            item = InventoryItem.objects.select_for_update().get(pk=self.item_id)
+            if item.quantity - self.delta < 0:
+                raise ValidationError(f"Bu harakatni o'chirib bo'lmaydi: qoldiq manfiy bo'lib qoladi "
+                                      f"(hozirgi qoldiq {item.quantity} {item.unit}).")
             InventoryItem.objects.filter(pk=self.item_id).update(quantity=F('quantity') - self.delta)
             return super().delete(*args, **kwargs)

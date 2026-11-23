@@ -1,10 +1,11 @@
 from django.urls import reverse
 
+from core.permissions import can
 from core.utils import badge_cell, section
 
 
 def facility_detail(request, obj):
-    can_edit = request.user.is_superuser or request.user.role in ('admin', 'manager')
+    can_edit = can(request.user, 'facilities', 'edit')
     nxt = reverse('facilities_detail', args=[obj.pk])
     q = f'?facility={obj.pk}&next={nxt}'
 

@@ -249,6 +249,9 @@ class Crud:
                     messages.error(request, f"«{label}» bilan bog'liq yozuvlar mavjud, shuning uchun o'chirib bo'lmaydi. "
                                             f"Avval bog'liq yozuvlarni o'chiring yoki holatini o'zgartiring.")
                     return redirect(back)
+                except ValidationError as e:
+                    messages.error(request, ' '.join(e.messages))
+                    return redirect(back)
                 messages.success(request, f"«{label}» o'chirildi.")
                 return redirect(back)
             ctx = self.base_ctx(request)
