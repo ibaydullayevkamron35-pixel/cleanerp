@@ -187,8 +187,46 @@ def r_quality(start, end):
              ('Hal qilinmagan shikoyatlar', complaints.filter(status__in=['new', 'in_progress']).count())])
 
 
+def r_teams(start, end):
+    """Qaysi brigadaga qancha ish berilgan: brigadalar kesimida."""
+    from hr.models import Team
+    from orders.models import Order
+
+    qs = Order.objects.filter(date__range=(start, end))
+    rows = []
+    for t in Team.objects.select_related('foreman').order_by('name'):
+        o = qs.filter(team=t)
+        active = o.exclude(status='cancelled')
+        rows.append((t.name, t.foreman.full_name if t.foreman else None, t.member_count, o.count(),
+                     o.filter(status__in=['new', 'confirmed']).count(), o.filter(status='in_progress').count(),
+                     o.filter(status='done').count(), o.filter(status='cancelled').count(),
+                     _sum(active, 'total')))
+    free = qs.filter(team__isnull=True).exclude(status='cancelled')
+    rows.append(('Brigada biriktirilmagan', None, None, free.count(),
+                 free.filter(status__in=['new', 'confirmed']).count(), free.filter(status='in_progress').count(),
+                 free.filter(status='done').count(), 0, _sum(free, 'total')))
+    return (['Brigada', 'Brigadir', 'Xodimlar', 'Jami ish', 'Kutilmoqda', 'Jarayonda', 'Bajarilgan', 'Bekor',
+             "Summa (so'm)"], rows,
+            [('Davrdagi buyurtmalar', qs.count()), ('Brigadaga berilgan', qs.filter(team__isnull=False).count()),
+             ('Brigada biriktirilmagan', qs.filter(team__isnull=True).exclude(status='cancelled').count())])
+
+
+def r_team_orders(start, end):
+    """Har bir brigadaga berilgan aniq buyurtmalar ro'yxati."""
+    from orders.models import Order
+
+    qs = (Order.objects.filter(date__range=(start, end)).select_related('team', 'facility', 'client', 'service')
+          .order_by('team__name', 'date', 'time'))
+    rows = [(o.team.name if o.team else 'Brigada biriktirilmagan', o.date, o.time.strftime('%H:%M'), o.number,
+             o.client.name, o.facility.name, o.service.name, o.get_status_display()) for o in qs]
+    return (['Brigada', 'Sana', 'Vaqt', 'Buyurtma', 'Mijoz', 'Obyekt', 'Xizmat', 'Holat'], rows,
+            [('Jami buyurtma', len(rows))])
+
+
 REPORTS = {
     'orders': ('Buyurtmalar hisoboti', r_orders),
+    'teams': ('Brigadalar bo\'yicha ish taqsimoti (xulosa)', r_teams),
+    'team_orders': ('Brigadalarga berilgan buyurtmalar (batafsil)', r_team_orders),
     'finance': ('Moliyaviy hisobot (daromad va xarajat)', r_finance),
     'profit': ('Foyda: obyektlar kesimida', r_profit),
     'debts': ('Qarzdorlik hisoboti', r_debts),
