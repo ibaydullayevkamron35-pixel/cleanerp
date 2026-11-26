@@ -151,6 +151,10 @@ def my_tasks(request):
 
     emp = getattr(request.user, 'employee_profile', None)
     ctx = {'employee': emp}
+    if emp is None and (request.user.is_superuser or request.user.role in ('admin', 'manager')):
+        today = timezone.localdate()
+        ctx['overview'] = (Order.objects.exclude(status__in=['done', 'cancelled']).filter(date__gte=today)
+                           .select_related('team', 'facility', 'service').order_by('team__name', 'date', 'time')[:60])
     if emp:
         today = timezone.localdate()
         cond = Q(pk__in=[])
