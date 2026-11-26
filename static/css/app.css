@@ -113,3 +113,15 @@ a:hover { text-decoration: underline; }
 .inline-form { display: inline; }
 .table-actions { white-space: nowrap; text-align: right; }
 @media print { .sidebar, .topbar, .filter-bar, .no-print { display: none !important; } .content { padding: 0; } }
+
+/* Galochkali ko'p tanlov */
+.dd-multi .dd-toggle { background-color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dd-multi .dd-menu { max-height: 280px; overflow-y: auto; }
+.dd-multi .dd-item { cursor: pointer; padding: .45rem .75rem; }
+.dd-multi .dd-item:has(input:checked) { background: rgba(15, 118, 110, .08); font-weight: 500; }
+.dd-multi .form-check-input:checked { background-color: var(--brand); border-color: var(--brand); }
+
+.dd-single .dd-toggle { background-color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dd-single .dd-menu { max-height: none; overflow: visible; }
+.dd-single .dd-list { max-height: 230px; overflow-y: auto; }
+.dd-single .dd-opt.active-opt { background: rgba(15, 118, 110, .08); font-weight: 500; color: inherit; }
