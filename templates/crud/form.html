@@ -5,7 +5,7 @@
   <h1>{% if mode == 'add' %}{{ cfg.singular }} qo'shish{% else %}{{ cfg.singular }}ni tahrirlash{% endif %}</h1>
 </div>
 <div class="card" style="max-width: 820px">
-  <form method="post" enctype="multipart/form-data" class="card-body" novalidate>
+  <form method="post" enctype="multipart/form-data" class="card-body" novalidate autocomplete="off" data-client-quick="{% url 'clients_quick_add' %}" data-facility-quick="{% url 'facilities_quick_add' %}">
     {% csrf_token %}
     {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
     {% if form.non_field_errors %}
@@ -13,7 +13,7 @@
     {% endif %}
     <div class="row g-3">
       {% for field in form %}
-      <div class="{% if field.widget_type == 'textarea' or field.name == 'note' or field.widget_type == 'selectmultiple' %}col-12{% else %}col-md-6{% endif %}">
+      <div class="{% if field.widget_type == 'textarea' or field.name == 'note' or field.widget_type == 'selectmultiple' or field.widget_type == 'checkboxdropdown' %}col-12{% else %}col-md-6{% endif %}">
         {% if field.widget_type == 'checkbox' %}
           <div class="form-check mt-md-4">
             {{ field }}
@@ -34,4 +34,5 @@
     </div>
   </form>
 </div>
+{% if owner_json %}<script type="application/json" id="owner-map">{{ owner_json|safe }}</script>{% endif %}
 {% endblock %}
