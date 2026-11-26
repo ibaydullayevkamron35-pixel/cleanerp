@@ -3,7 +3,20 @@
 {% block content %}
 <div class="page-head"><h1>Mening vazifalarim</h1></div>
 
-{% if not employee %}
+{% if not employee and overview is not None %}
+<div class="card mb-4">
+  <div class="card-header">Barcha brigadalar vazifalari (bugundan keyingi, bajarilmagan)</div>
+  {% if overview %}
+  <div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th>Brigada</th><th>Sana</th><th>Vaqt</th><th>Obyekt</th><th>Xizmat</th></tr></thead>
+    <tbody>{% for o in overview %}<tr>
+      <td>{% if o.team %}{{ o.team.name }}{% else %}<span class="text-muted">Biriktirilmagan</span>{% endif %}</td>
+      <td>{{ o.date|date:"d.m.Y" }}</td><td>{{ o.time|time:"H:i" }}</td><td>{{ o.facility.name }}</td><td>{{ o.service.name }}</td>
+    </tr>{% endfor %}</tbody></table></div>
+  {% else %}<div class="empty py-4">Hozircha ochiq vazifa yo'q.</div>{% endif %}
+  <div class="card-footer small text-muted">Siz xodim kartochkasiga ulanmagansiz, shuning uchun umumiy ko'rinish ko'rsatilmoqda. Brigada bo'yicha to'liq hisobot: Hisobotlar bo'limi.</div>
+</div>
+{% elif not employee %}
 <div class="card"><div class="empty"><h2>Xodim kartochkasi biriktirilmagan</h2><p>Menejerga murojaat qiling: sizning hisobingiz xodim kartochkasiga ulanishi kerak.</p></div></div>
 {% else %}
 <div class="card mb-4">
