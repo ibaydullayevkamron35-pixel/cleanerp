@@ -15,15 +15,6 @@ from .models import Order
 
 STATUS_LABELS = dict(Order.Status.choices)
 
-# Holatlar ketma-ketligi: qaysi holatdan qaysilariga o'tish mumkin
-TRANSITIONS = {
-    'new': ('confirmed', 'cancelled'),
-    'confirmed': ('in_progress', 'cancelled'),
-    'in_progress': ('done',),
-    'done': (),
-    'cancelled': ('new',),
-}
-
 
 def _is_assigned(user, order):
     """Brigadir yoki xodim o'z brigadasining buyurtmasini boshqara oladimi."""
@@ -98,10 +89,6 @@ def order_status(request, pk, status):
         _is_assigned(request.user, order) and status in ('in_progress', 'done'))
     if not allowed:
         raise PermissionDenied
-    if status not in TRANSITIONS.get(order.status, ()):
-        messages.error(request, f"«{order.get_status_display()}» holatidan «{STATUS_LABELS[status]}» holatiga "
-                                f"o'tkazib bo'lmaydi.")
-        return redirect('orders_detail', pk=order.pk)
     old = order.get_status_display()
     order.status = status
     order.save(update_fields=['status'])
