@@ -30,6 +30,23 @@
       {% endfor %}
     </nav>
   </aside>
+  <script>
+  (function () {
+    var sb = document.getElementById('sidebar');
+    if (!sb) { return; }
+    var saved = null;
+    try { saved = sessionStorage.getItem('sbScroll'); } catch (e) {}
+    var act = sb.querySelector('.nav-link.active');
+    if (saved !== null) { sb.scrollTop = parseInt(saved, 10) || 0; }
+    if (act) {
+      var r = act.getBoundingClientRect(), h = sb.getBoundingClientRect();
+      if (r.top < h.top + 60 || r.bottom > h.bottom - 20) { sb.scrollTop += r.top - h.top - h.height / 2; }
+    }
+    function keep() { try { sessionStorage.setItem('sbScroll', sb.scrollTop); } catch (e) {} }
+    sb.addEventListener('scroll', keep);
+    window.addEventListener('pagehide', keep);
+  })();
+  </script>
 
   <div class="main">
     <header class="topbar">
