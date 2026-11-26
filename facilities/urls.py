@@ -30,4 +30,6 @@ schedules = Crud(
     search=('facility__name', 'service__name'), select_related=('facility', 'service'), allow_detail=False,
 )
 
-urlpatterns = facilities.patterns() + zones.patterns() + schedules.patterns()
+from django.urls import path
+
+urlpatterns = [path('obyektlar/tezkor/', views.quick_add, name='facilities_quick_add')] + facilities.patterns() + zones.patterns() + schedules.patterns()

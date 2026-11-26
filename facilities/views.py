@@ -1,11 +1,10 @@
 from django.urls import reverse
 
-from core.permissions import can
 from core.utils import badge_cell, section
 
 
 def facility_detail(request, obj):
-    can_edit = can(request.user, 'facilities', 'edit')
+    can_edit = request.user.is_superuser or request.user.role in ('admin', 'manager')
     nxt = reverse('facilities_detail', args=[obj.pk])
     q = f'?facility={obj.pk}&next={nxt}'
 
@@ -50,3 +49,37 @@ def facility_detail(request, obj):
                     empty="Tekshiruvlar o'tkazilmagan"),
         ],
     }
+
+
+def quick_add(request):
+    """Shartnoma formasidan chiqmasdan yangi obyekt (ofis, bino va h.k.) qo'shish."""
+    from django.http import JsonResponse
+    from django.views.decorators.http import require_POST
+
+    from core.models import AuditLog
+    from core.permissions import can
+
+    from .models import Facility
+
+    @require_POST
+    def inner(request):
+        if not request.user.is_authenticated or not can(request.user, 'facilities', 'edit'):
+            return JsonResponse({'error': "Ruxsat yo'q"}, status=403)
+        name = request.POST.get('name', '').strip()
+        address = request.POST.get('address', '').strip()
+        kind = request.POST.get('kind') or Facility.Kind.OFFICE
+        if kind not in Facility.Kind.values:
+            kind = Facility.Kind.OFFICE
+        if not request.POST.get('client', '').isdigit():
+            return JsonResponse({'error': 'Avval mijozni tanlang.'}, status=400)
+        if not name or not address:
+            return JsonResponse({'error': 'Nomi va manzilni kiriting.'}, status=400)
+        from crm.models import Client
+        client = Client.objects.filter(pk=request.POST['client']).first()
+        if client is None:
+            return JsonResponse({'error': 'Mijoz topilmadi.'}, status=400)
+        obj = Facility.objects.create(client=client, name=name[:200], address=address[:255], kind=kind)
+        AuditLog.log(request.user, 'create', obj)
+        return JsonResponse({'id': obj.pk, 'label': str(obj), 'client': client.pk})
+
+    return inner(request)
