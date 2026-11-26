@@ -1,12 +1,21 @@
 from django import forms
 
+from .widgets import CheckboxDropdown
+
 
 def style_form(form):
     """Barcha maydonlarga Bootstrap klasslari va to'g'ri HTML5 kiritish turlarini beradi."""
     for field in form.fields.values():
         w = field.widget
+        if type(w) is forms.SelectMultiple:
+            new = CheckboxDropdown(attrs=w.attrs)
+            new.choices = field.choices
+            new.is_required = field.required
+            field.widget = w = new
         if isinstance(w, forms.CheckboxInput):
             cls = 'form-check-input'
+        elif isinstance(w, CheckboxDropdown):
+            cls = ''
         elif isinstance(w, (forms.Select, forms.SelectMultiple)):
             cls = 'form-select'
         elif isinstance(w, (forms.CheckboxSelectMultiple, forms.RadioSelect)):

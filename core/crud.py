@@ -33,6 +33,22 @@ def default_summary(obj):
     return rows
 
 
+
+def owner_json(form):
+    """Formadagi obyekt/shartnoma/buyurtma ro'yxatlarini mijoz bo'yicha filtrlash uchun {maydon: {pk: mijoz_id}}."""
+    import json
+    from django.forms import ModelChoiceField
+    if 'client' not in form.fields:
+        return ''
+    out = {}
+    for name, f in form.fields.items():
+        if name == 'client' or not isinstance(f, ModelChoiceField):
+            continue
+        model = f.queryset.model
+        if any(fl.name == 'client' for fl in model._meta.fields):
+            out[name] = {str(pk): cid for pk, cid in f.queryset.values_list('pk', 'client_id')}
+    return json.dumps(out).replace('<', '\\u003c')
+
 @dataclass
 class Crud:
     slug: str
@@ -210,7 +226,7 @@ class Crud:
                 initial = {k: v for k, v in request.GET.items() if k in Form.base_fields}
                 form = Form(initial=initial)
             ctx = self.base_ctx(request)
-            ctx.update({'form': form, 'mode': 'add', 'next': self.safe_next(request) or '',
+            ctx.update({'form': form, 'owner_json': owner_json(form), 'mode': 'add', 'next': self.safe_next(request) or '',
                         'cancel_url': self.safe_next(request) or reverse(self.name('list'))})
             return render(request, 'crud/form.html', ctx)
         return add_view
@@ -229,7 +245,7 @@ class Crud:
             back = self.safe_next(request) or (
                 reverse(self.name('detail'), args=[obj.pk]) if self.allow_detail else reverse(self.name('list')))
             ctx = self.base_ctx(request)
-            ctx.update({'form': form, 'obj': obj, 'mode': 'edit', 'next': self.safe_next(request) or '',
+            ctx.update({'form': form, 'owner_json': owner_json(form), 'obj': obj, 'mode': 'edit', 'next': self.safe_next(request) or '',
                         'cancel_url': back})
             return render(request, 'crud/form.html', ctx)
         return edit_view
@@ -248,9 +264,6 @@ class Crud:
                 except (ProtectedError, RestrictedError):
                     messages.error(request, f"«{label}» bilan bog'liq yozuvlar mavjud, shuning uchun o'chirib bo'lmaydi. "
                                             f"Avval bog'liq yozuvlarni o'chiring yoki holatini o'zgartiring.")
-                    return redirect(back)
-                except ValidationError as e:
-                    messages.error(request, ' '.join(e.messages))
                     return redirect(back)
                 messages.success(request, f"«{label}» o'chirildi.")
                 return redirect(back)

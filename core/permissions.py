@@ -55,6 +55,8 @@ MENU = [
     ('Xodimlar', [
         ('employees', 'Xodimlar', 'bi-person-badge', 'employees_list'),
         ('teams', 'Brigadalar', 'bi-people-fill', 'teams_list'),
+        ('reports', 'Brigada hisoboti (xulosa)', 'bi-clipboard-data', 'reports?type=teams'),
+        ('reports', 'Brigadalarga berilgan ishlar', 'bi-card-checklist', 'reports?type=team_orders'),
         ('shifts', 'Ish jadvali', 'bi-calendar-week', 'shifts_list'),
         ('attendance', 'Davomat', 'bi-clock-history', 'attendance_list'),
         ('payroll', 'Ish haqi', 'bi-cash-coin', 'payroll'),

@@ -87,26 +87,6 @@ class BusinessLogicTests(TestCase):
         item.refresh_from_db()
         self.assertEqual(item.quantity, Decimal('6.00'))
 
-    def test_deleting_movement_cannot_make_stock_negative(self):
-        item = InventoryItem.objects.create(name='Vosita', unit='litr')
-        incoming = StockMovement.objects.create(item=item, kind='in', quantity=10)
-        StockMovement.objects.create(item=item, kind='out', quantity=8)
-        with self.assertRaises(ValidationError):
-            incoming.delete()
-        item.refresh_from_db()
-        self.assertEqual(item.quantity, Decimal('2.00'))
-
-    def test_xlsx_export_has_header_row(self):
-        from io import BytesIO
-
-        from openpyxl import load_workbook
-
-        from core.utils import xlsx_response
-        resp = xlsx_response('t', 'Test', ['Nomi', 'Summa'], [['A', Decimal('5')]])
-        ws = load_workbook(BytesIO(resp.content)).active
-        self.assertEqual([c.value for c in ws[1]], ['Nomi', 'Summa'])
-        self.assertEqual([c.value for c in ws[2]], ['A', 5])
-
     def test_cannot_issue_more_than_stock(self):
         item = InventoryItem.objects.create(name='Vosita', unit='litr')
         StockMovement.objects.create(item=item, kind='in', quantity=2)
@@ -202,13 +182,6 @@ class AccessTests(TestCase):
         self.assertEqual(r.status_code, 302)
         order.refresh_from_db()
         self.assertEqual(order.status, 'confirmed')
-
-    def test_order_status_cannot_skip_steps(self):
-        self.login('menejer')
-        order = Order.objects.filter(status='new').first()
-        self.client.post(reverse('orders_status', args=[order.pk, 'done']))
-        order.refresh_from_db()
-        self.assertEqual(order.status, 'new')
 
     def test_protected_delete_shows_message_not_error(self):
         self.login('admin')

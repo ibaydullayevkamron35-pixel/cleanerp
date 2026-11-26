@@ -17,11 +17,17 @@ def nav(request):
             entries = []
             for section, label, icon, url_name in items:
                 if can(user, section, 'view'):
+                    base, _, qs = url_name.partition('?')
+                    if qs:
+                        active = current == base and request.GET.get('type') == qs.split('=')[1]
+                    else:
+                        active = base.split('_')[0] == cur_prefix and not (
+                            current == 'reports' and request.GET.get('type') in ('teams', 'team_orders'))
                     entries.append({
                         'label': label,
                         'icon': icon,
-                        'url': reverse(url_name),
-                        'active': url_name.split('_')[0] == cur_prefix,
+                        'url': reverse(base) + ('?' + qs if qs else ''),
+                        'active': active,
                     })
             if entries:
                 groups.append({'title': title, 'items': entries})
