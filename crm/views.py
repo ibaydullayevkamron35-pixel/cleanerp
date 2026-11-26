@@ -4,14 +4,14 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from core.models import AuditLog
-from core.permissions import can, section_required
+from core.permissions import section_required
 from core.utils import badge_cell, section
 
 from .models import Client, Lead
 
 
 def client_detail(request, obj):
-    can_edit = can(request.user, 'clients', 'edit')
+    can_edit = request.user.is_superuser or request.user.role in ('admin', 'manager')
     nxt = reverse('clients_detail', args=[obj.pk])
 
     facilities = [
@@ -69,7 +69,7 @@ def client_detail(request, obj):
 
 def lead_detail(request, obj):
     actions = []
-    can_edit = can(request.user, 'leads', 'edit')
+    can_edit = request.user.is_superuser or request.user.role in ('admin', 'manager')
     if can_edit and obj.status != Lead.Status.CONVERTED:
         actions.append({'label': 'Mijozga aylantirish', 'url': reverse('leads_convert', args=[obj.pk]),
                         'method': 'post', 'cls': 'btn-success', 'icon': 'bi-person-plus'})
@@ -94,3 +94,48 @@ def lead_convert(request, pk):
     AuditLog.log(request.user, 'create', client, details=f'Arizadan #{lead.pk}')
     messages.success(request, f'«{client.name}» mijozlar ro\'yxatiga qo\'shildi.')
     return redirect('clients_detail', pk=client.pk)
+
+
+def contract_detail(request, obj):
+    from core.crud import default_summary
+
+    facs = [({'v': f.name, 'url': reverse('facilities_detail', args=[f.pk])}, f.get_kind_display(), f.address,
+             f.area) for f in obj.facilities.all()]
+    orders = [({'v': o.number, 'url': reverse('orders_detail', args=[o.pk])}, o.date, o.facility.name,
+               o.team.name if o.team else None, badge_cell(o.status, o.get_status_display()))
+              for o in obj.orders.select_related('facility', 'team')[:15]]
+    return {
+        'summary': default_summary(obj) + [('Obyektlar soni', obj.facilities.count())],
+        'sections': [
+            section('Shartnoma obyektlari', ['Nomi', 'Turi', 'Manzil', 'Maydon (m²)'], facs,
+                    empty="Shartnomaga obyekt biriktirilmagan"),
+            section('Shartnoma bo\'yicha buyurtmalar', ['Raqami', 'Sana', 'Obyekt', 'Brigada', 'Holat'], orders,
+                    empty="Buyurtma yo'q"),
+        ],
+    }
+
+
+def client_quick_add(request):
+    """Forma ichidan chiqmasdan yangi mijoz qo'shish (JSON)."""
+    from django.http import JsonResponse
+    from django.views.decorators.http import require_POST
+
+    from core.models import AuditLog
+    from core.permissions import can
+
+    @require_POST
+    def inner(request):
+        if not request.user.is_authenticated or not can(request.user, 'clients', 'edit'):
+            return JsonResponse({'error': "Mijoz qo'shishga ruxsat yo'q"}, status=403)
+        name = request.POST.get('name', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        kind = request.POST.get('kind')
+        if kind not in Client.Kind.values:
+            kind = Client.Kind.INDIVIDUAL
+        if not name or not phone:
+            return JsonResponse({'error': 'Nomi va telefonni kiriting.'}, status=400)
+        obj = Client.objects.create(kind=kind, name=name[:200], phone=phone[:30])
+        AuditLog.log(request.user, 'create', obj)
+        return JsonResponse({'id': obj.pk, 'label': str(obj)})
+
+    return inner(request)

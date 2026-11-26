@@ -3,6 +3,7 @@ from django.urls import path
 from core.crud import Crud
 
 from . import views
+from .forms import ContractForm
 from .models import Client, Contract, Interaction, Lead
 
 clients = Crud(
@@ -23,7 +24,8 @@ contracts = Crud(
     fields=['client', 'number', 'date', 'end_date', 'amount', 'status', 'note'],
     search=('number', 'client__name'),
     filters=[('status', 'status', 'Holat', Contract.Status.choices)],
-    select_related=('client',),
+    select_related=('client',), form_class=ContractForm,
+    detail_context=views.contract_detail,
 )
 
 interactions = Crud(
@@ -47,6 +49,7 @@ leads = Crud(
 )
 
 urlpatterns = (
-    clients.patterns() + contracts.patterns() + interactions.patterns() + leads.patterns()
+    [path('mijozlar/tezkor/', views.client_quick_add, name='clients_quick_add')]
+    + clients.patterns() + contracts.patterns() + interactions.patterns() + leads.patterns()
     + [path('arizalar/<int:pk>/aylantirish/', views.lead_convert, name='leads_convert')]
 )

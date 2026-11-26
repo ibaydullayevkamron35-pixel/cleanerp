@@ -52,6 +52,8 @@ class Contract(models.Model):
     end_date = models.DateField('Amal qilish muddati (gacha)', null=True, blank=True)
     amount = models.DecimalField("Summa (so'm)", max_digits=14, decimal_places=2, default=0)
     status = models.CharField('Holat', max_length=12, choices=Status.choices, default=Status.ACTIVE)
+    facilities = models.ManyToManyField('facilities.Facility', verbose_name='Shartnoma obyektlari (ofis, bino va h.k.)',
+                                        blank=True, related_name='contracts')
     note = models.TextField('Izoh', blank=True)
 
     class Meta:
